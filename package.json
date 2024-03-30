@@ -1,0 +1,20 @@
+{
+  "name": "vanillin",
+  "version": "1.2.0",
+  "description": "a simple dev server with automatic ts/scss traspilation and page-reloading",
+  "main": "server.js",
+  "type": "module",
+  "bin": "cli.js",
+  "keywords": ["server", "dev", "typescript", "scss", "reload"],
+  "author": "Serghei Gurgurov",
+  "license": "ISC",
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "cookie": "^0.6.0",
+    "mime": "^4.0.1",
+    "node-inject-html": "^0.0.5",
+    "sass": "^1.72.0",
+    "typescript": "^5.4.3",
+    "ws": "^8.16.0"
+  }
+}
