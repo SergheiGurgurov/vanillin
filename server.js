@@ -3,6 +3,7 @@ import http, { IncomingMessage, ServerResponse } from 'http';
 import { Mime } from 'mime';
 import other from 'mime/types/other.js';
 import standard from 'mime/types/standard.js';
+import path from 'path';
 import sass from 'sass';
 import ts from 'typescript';
 import { parse } from 'url';
@@ -98,7 +99,12 @@ function getAsset(pathName, mimeType) {
         }
         case "text/x-typescript": {
             if (!existsSync(`.vanillin-cache/${pathName}.js`)) {
+                const dir = path.dirname(pathName);
+                if (!existsSync(`.vanillin-cache/${dir}`)) {
+                    mkdirSync(`.vanillin-cache/${dir}`, { recursive: true });
+                }
                 const transpiled = ts.transpile(readFileSync(`${pathName}`).toString(), { target: ts.ScriptTarget.ES2017 });
+                mkdirSync('.vanillin-cache', { recursive: true });
                 writeFileSync(`.vanillin-cache/${pathName}.js`, transpiled);
                 return transpiled;
             }

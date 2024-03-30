@@ -7,21 +7,30 @@ import { getAsset, getMimeType, getServer, injectHTML, parseUrl } from './server
 
 const { server, websocket } = getServer((req, res, port) => {
     const pathName = path.join('./', parseUrl(req).pathname || '');
-    const mimeType = getMimeType(req);
+    let mimeType = getMimeType(req);
     try {
         let file = getAsset(pathName, mimeType);
+        switch (mimeType) {
+            case 'text/html': {
+                if (file instanceof Buffer) {
+                    file = file.toString();
+                }
+                file = injectHTML(file, {
+                    bodyEnd: `<script>let port = ${port}; ${requireFile("./browser/refresh.browser.js")}</script>`,
+                }); // inject websocket into the html
+                break;
+            }
+            case "text/x-typescript": {
+                mimeType = "text/javascript";
+                break;
+            }
+            case "test/x-scss": {
+                mimeType = "text/css";
+                break;
+            }
+        }
         res.setHeader("Content-Type", mimeType);
         res.statusCode = 200;
-
-        if (mimeType === 'text/html') {
-            if (file instanceof Buffer) {
-                file = file.toString();
-            }
-            file = injectHTML(file, {
-                bodyEnd: `<script>let port = ${port}; ${requireFile("./browser/refresh.browser.js")}</script>`,
-            }); // inject websocket into the html
-        }
-
         res.write(file);
         res.end();
     } catch (error) {

@@ -1,6 +1,6 @@
 {
   "name": "vanillin",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "a simple dev server with automatic ts/scss traspilation and page-reloading",
   "main": "server.js",
   "type": "module",
