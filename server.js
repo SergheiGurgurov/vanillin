@@ -1,3 +1,6 @@
+import { transformFileSync } from '@babel/core';
+import babelJsx from '@babel/preset-react';
+import babelTs from '@babel/preset-typescript';
 import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import http, { IncomingMessage, ServerResponse } from 'http';
 import { Mime } from 'mime';
@@ -5,15 +8,13 @@ import other from 'mime/types/other.js';
 import standard from 'mime/types/standard.js';
 import path from 'path';
 import sass from 'sass';
-import ts from 'typescript';
 import { parse } from 'url';
 import { WebSocketServer } from "ws";
 import { injectHTML } from "./node_modules/node-inject-html/dist/cjs/index.js";
-
 const mime = new Mime(standard, other);
 
 mime.define({
-    "text/x-typescript": ["ts"],
+    "text/x-typescript": ["ts", "tsx"],
 }, true);
 
 
@@ -98,12 +99,16 @@ function getAsset(pathName, mimeType) {
             return readFileSync(`.vanillin-cache/${pathName}.css`);
         }
         case "text/x-typescript": {
+
             if (!existsSync(`.vanillin-cache/${pathName}.js`)) {
                 const dir = path.dirname(pathName);
                 if (!existsSync(`.vanillin-cache/${dir}`)) {
                     mkdirSync(`.vanillin-cache/${dir}`, { recursive: true });
                 }
-                const transpiled = ts.transpile(readFileSync(`${pathName}`).toString(), { target: ts.ScriptTarget.ES2017 });
+                const transpiled = transformFileSync(`${pathName}`, { ast: false, sourceMaps: false, presets: [babelTs, babelJsx] }).code;
+                if (!transpiled) {
+                    throw new Error(`Could not transpile ${pathName}`);
+                }
                 mkdirSync('.vanillin-cache', { recursive: true });
                 writeFileSync(`.vanillin-cache/${pathName}.js`, transpiled);
                 return transpiled;
@@ -113,7 +118,10 @@ function getAsset(pathName, mimeType) {
             const originalInfo = lstatSync(`${pathName}`);
             //check if the original file has been modified
             if (originalInfo.mtimeMs > cachedInfo.mtimeMs) {
-                const transpiled = ts.transpile(readFileSync(`${pathName}`).toString(), { target: ts.ScriptTarget.ES2017 });
+                const transpiled = transformFileSync(`${pathName}`, { ast: false, sourceMaps: false, presets: [babelTs, babelJsx] }).code;
+                if (!transpiled) {
+                    throw new Error(`Could not transpile ${pathName}`);
+                }
                 writeFileSync(`.vanillin-cache/${pathName}.js`, transpiled);
                 return transpiled;
             }
